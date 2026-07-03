@@ -14,7 +14,9 @@
     --charcoal-lift:#26262A;
     --charcoal-card:#222226;
     --gold:#C9A96E;
+    --gold-bright:#E3C893;
     --gold-dim:rgba(201,169,110,0.35);
+    --gold-faint:rgba(201,169,110,0.14);
     --ivory:#F4F1EA;
     --ivory-dim:rgba(244,241,234,0.72);
     --sage:rgba(74,85,72,0.15);
@@ -22,10 +24,6 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
-  @media (prefers-reduced-motion: reduce){
-    html{scroll-behavior:auto;}
-    *,*::before,*::after{animation:none!important;transition:none!important;}
-  }
   body{
     background:var(--charcoal);
     color:var(--ivory);
@@ -33,12 +31,20 @@
     font-size:20px;
     line-height:1.6;
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
   a{color:var(--gold);}
   :focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
 
+  /* ---------- motion safety ---------- */
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation:none!important;transition:none!important;}
+    #dust{display:none;}
+  }
+
   /* ---------- shared ---------- */
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;position:relative;z-index:1;}
   .hairline{
     height:1px;border:0;
     background:linear-gradient(90deg,transparent,var(--gold) 18%,var(--gold) 82%,transparent);
@@ -52,15 +58,36 @@
     font-size:clamp(34px,4.6vw,52px);line-height:1.12;
     text-align:center;letter-spacing:-0.01em;margin:22px 0 18px;
   }
-  .section{padding:110px 0;}
-  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease, transform .7s ease;}
+  .section{padding:120px 0;position:relative;}
+
+  /* reveals: base + stagger */
+  .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.2,.6,.2,1), transform .8s cubic-bezier(.2,.6,.2,1);}
   .reveal.in{opacity:1;transform:none;}
-  @media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none;}}
+  .stagger > *{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.6,.2,1), transform .7s cubic-bezier(.2,.6,.2,1);}
+  .stagger.in > *{opacity:1;transform:none;}
+  .stagger.in > *:nth-child(1){transition-delay:.05s}
+  .stagger.in > *:nth-child(2){transition-delay:.18s}
+  .stagger.in > *:nth-child(3){transition-delay:.31s}
+  .stagger.in > *:nth-child(4){transition-delay:.44s}
+  .stagger.in > *:nth-child(5){transition-delay:.57s}
+  @media (prefers-reduced-motion: reduce){.reveal,.stagger>*{opacity:1;transform:none;}}
+
+  /* ---------- scroll progress ---------- */
+  #progress{
+    position:fixed;top:0;left:0;height:2px;width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--gold-bright));
+    z-index:100;box-shadow:0 0 12px rgba(201,169,110,0.55);
+  }
+
+  /* ---------- gold dust canvas ---------- */
+  #dust{
+    position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.85;
+  }
 
   /* ---------- nav ---------- */
   nav{
     position:sticky;top:0;z-index:50;
-    background:rgba(28,28,30,0.88);backdrop-filter:blur(10px);
+    background:rgba(28,28,30,0.82);backdrop-filter:blur(12px);
     border-bottom:1px solid rgba(201,169,110,0.18);
   }
   .nav-inner{
@@ -72,22 +99,36 @@
     font-family:'Playfair Display',serif;font-size:19px;letter-spacing:0.02em;
     color:var(--ivory);text-decoration:none;
   }
+  .nav-mark svg{transition:transform .8s cubic-bezier(.2,.6,.2,1);}
+  .nav-mark:hover svg{transform:rotate(360deg);}
   .nav-links{display:flex;gap:26px;align-items:center;}
   .nav-links a{
     color:var(--ivory-dim);text-decoration:none;font-size:17px;letter-spacing:0.04em;
+    position:relative;
   }
+  .nav-links a:not(.btn)::after{
+    content:"";position:absolute;left:0;bottom:-4px;width:0;height:1px;
+    background:var(--gold);transition:width .3s;
+  }
+  .nav-links a:not(.btn):hover::after{width:100%;}
   .nav-links a:hover{color:var(--gold);}
+
   .btn{
     display:inline-block;font-family:'Cormorant Garamond',serif;font-weight:600;
     font-size:19px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;
     color:var(--charcoal);background:var(--gold);
     padding:14px 34px;border:1px solid var(--gold);border-radius:2px;
-    cursor:pointer;transition:background .25s,color .25s;
+    cursor:pointer;transition:background .25s,color .25s,box-shadow .25s,transform .25s;
+    position:relative;overflow:hidden;
   }
-  .btn:hover{background:transparent;color:var(--gold);}
-  .btn-ghost{
-    background:transparent;color:var(--gold);
+  .btn::before{ /* shimmer sweep */
+    content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;
+    background:linear-gradient(105deg,transparent,rgba(255,255,255,0.45),transparent);
+    transform:skewX(-20deg);transition:left .6s ease;
   }
+  .btn:hover::before{left:130%;}
+  .btn:hover{box-shadow:0 6px 30px rgba(201,169,110,0.35);transform:translateY(-1px);}
+  .btn-ghost{background:transparent;color:var(--gold);}
   .btn-ghost:hover{background:var(--gold);color:var(--charcoal);}
   .nav-cta{padding:9px 20px;font-size:15px;}
   @media(max-width:720px){.nav-links a:not(.nav-cta){display:none;}}
@@ -95,35 +136,73 @@
   /* ---------- hero ---------- */
   header.hero{
     position:relative;overflow:hidden;text-align:center;
-    padding:120px 28px 130px;
+    padding:130px 28px 150px;
     background:radial-gradient(ellipse 130% 90% at 50% 12%, var(--charcoal-lift) 0%, var(--charcoal) 62%);
   }
   header.hero::after{
-    content:"";position:absolute;left:50%;top:70%;width:820px;height:820px;
+    content:"";position:absolute;left:50%;top:70%;width:900px;height:900px;
     transform:translate(-50%,-50%);
     background:radial-gradient(circle,var(--sage) 0%,transparent 60%);
     pointer-events:none;
   }
   .hero > *{position:relative;z-index:1;}
   .hero .hairline{width:min(420px,70%);margin:0 auto 30px;}
+
+  /* self-drawing breathing enso */
+  .enso-hero{margin:0 auto 10px;display:block;}
+  .enso-hero .stroke{
+    stroke-dasharray:340;
+    stroke-dashoffset:340;
+    animation:drawEnso 2.6s cubic-bezier(.4,0,.2,1) .3s forwards;
+    filter:drop-shadow(0 0 6px rgba(201,169,110,0.35));
+  }
+  @keyframes drawEnso{to{stroke-dashoffset:0;}}
+  .enso-breathe{animation:breathe 7s ease-in-out 3s infinite;transform-origin:center;}
+  @keyframes breathe{
+    0%,100%{transform:scale(1);opacity:1;}
+    50%{transform:scale(1.045);opacity:0.88;}
+  }
+
   .hero-kicker{
     font-family:'Playfair Display',serif;font-weight:400;
-    font-size:clamp(26px,3.4vw,40px);margin-top:44px;
+    font-size:clamp(26px,3.4vw,40px);margin-top:40px;
+    opacity:0;animation:riseIn 1s ease .9s forwards;
   }
   .hero-title{
     font-family:'Playfair Display',serif;font-weight:500;text-transform:uppercase;
     font-size:clamp(56px,9.5vw,124px);line-height:1.03;letter-spacing:-0.02em;
     margin:6px 0 26px;
+    background:linear-gradient(180deg,var(--ivory) 55%,#C8C2B4 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    opacity:0;animation:riseIn 1s ease 1.15s forwards;
   }
   .hero-sub{
     font-style:italic;font-size:clamp(21px,2.4vw,28px);color:var(--ivory-dim);
     max-width:620px;margin:0 auto 46px;
+    opacity:0;animation:riseIn 1s ease 1.45s forwards;
   }
-  .hero-ctas{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;}
-  .hero-note{margin-top:22px;font-size:16px;color:var(--ivory-dim);letter-spacing:0.05em;}
+  .hero-ctas{
+    display:flex;gap:18px;justify-content:center;flex-wrap:wrap;
+    opacity:0;animation:riseIn 1s ease 1.7s forwards;
+  }
+  .hero-note{
+    margin-top:22px;font-size:16px;color:var(--ivory-dim);letter-spacing:0.05em;
+    opacity:0;animation:riseIn 1s ease 1.9s forwards;
+  }
+  @keyframes riseIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion: reduce){
+    .hero-kicker,.hero-title,.hero-sub,.hero-ctas,.hero-note{opacity:1;animation:none;}
+    .enso-hero .stroke{stroke-dashoffset:0;animation:none;}
+  }
 
-  /* enso */
-  .enso{margin:0 auto 6px;}
+  /* ---------- section divider art ---------- */
+  .divider{
+    display:flex;align-items:center;justify-content:center;gap:22px;
+    margin:0 auto;max-width:520px;opacity:0.9;
+  }
+  .divider .line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim));}
+  .divider .line:last-child{background:linear-gradient(90deg,var(--gold-dim),transparent);}
+  .divider svg{flex:0 0 auto;}
 
   /* ---------- problem ---------- */
   .problem-grid{
@@ -131,8 +210,17 @@
     background:rgba(201,169,110,0.18);margin-top:56px;
   }
   .problem-cell{
-    background:var(--charcoal);padding:44px 34px;
+    background:var(--charcoal);padding:48px 34px;position:relative;overflow:hidden;
+    transition:background .4s;
   }
+  .problem-cell::before{
+    content:"";position:absolute;top:0;left:0;width:100%;height:1px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+    transform:scaleX(0);transition:transform .5s ease;
+  }
+  .problem-cell:hover{background:var(--charcoal-card);}
+  .problem-cell:hover::before{transform:scaleX(1);}
+  .problem-cell .glyph{margin-bottom:22px;opacity:0.9;}
   .problem-cell h3{
     font-family:'Playfair Display',serif;font-weight:500;font-size:24px;
     margin-bottom:12px;line-height:1.25;
@@ -140,23 +228,34 @@
   .problem-cell p{color:var(--ivory-dim);font-size:19px;}
   @media(max-width:820px){.problem-grid{grid-template-columns:1fr;}}
 
-  /* ---------- modules (interactive) ---------- */
+  /* ---------- modules ---------- */
   .modules{background:var(--charcoal-lift);}
+  .modules::before{ /* faint giant enso backdrop */
+    content:"";position:absolute;right:-160px;top:50%;transform:translateY(-50%);
+    width:640px;height:640px;border-radius:50%;
+    border:1px solid var(--gold-faint);
+    -webkit-mask:linear-gradient(120deg,#000 30%,transparent 75%);
+    mask:linear-gradient(120deg,#000 30%,transparent 75%);
+    pointer-events:none;
+  }
   .mod-layout{display:grid;grid-template-columns:340px 1fr;gap:2px;margin-top:56px;
     background:rgba(201,169,110,0.18);}
   .mod-tabs{background:var(--charcoal-lift);display:flex;flex-direction:column;}
   .mod-tab{
     text-align:left;background:transparent;border:0;border-left:2px solid transparent;
     color:var(--ivory-dim);font-family:'Cormorant Garamond',serif;font-size:21px;
-    padding:22px 26px;cursor:pointer;transition:color .2s,border-color .2s,background .2s;
+    padding:22px 26px;cursor:pointer;transition:color .25s,border-color .25s,background .25s,padding-left .25s;
   }
+  .mod-tab:hover{color:var(--ivory);padding-left:32px;}
   .mod-tab[aria-selected="true"]{
     color:var(--ivory);border-left-color:var(--gold);background:var(--charcoal-card);
   }
   .mod-tab .n{color:var(--gold);font-size:15px;letter-spacing:0.18em;display:block;margin-bottom:2px;}
   .mod-panel{
-    background:var(--charcoal-card);padding:52px 56px;min-height:380px;
+    background:var(--charcoal-card);padding:52px 56px;min-height:400px;position:relative;
   }
+  .mod-inner{transition:opacity .3s ease, transform .3s ease;}
+  .mod-inner.swap{opacity:0;transform:translateY(12px);}
   .mod-panel h3{
     font-family:'Playfair Display',serif;font-weight:500;font-size:32px;margin-bottom:16px;
   }
@@ -168,20 +267,47 @@
   }
   .mod-panel li::before{
     content:"";position:absolute;left:0;top:22px;width:14px;height:1px;background:var(--gold);
+    transition:width .3s;
   }
+  .mod-panel li:hover::before{width:22px;}
   @media(max-width:860px){
     .mod-layout{grid-template-columns:1fr;}
     .mod-tabs{flex-direction:row;overflow-x:auto;}
     .mod-tab{border-left:0;border-bottom:2px solid transparent;white-space:nowrap;}
+    .mod-tab:hover{padding-left:26px;}
     .mod-tab[aria-selected="true"]{border-bottom-color:var(--gold);}
     .mod-panel{padding:36px 28px;}
+    .modules::before{display:none;}
   }
 
-  /* ---------- outcome / 30 days ---------- */
-  .timeline{max-width:720px;margin:60px auto 0;}
+  /* ---------- 30 days / timeline ---------- */
+  #plan{overflow:hidden;}
+  .mountains{
+    position:absolute;bottom:0;left:0;width:100%;opacity:0.5;pointer-events:none;
+  }
+  .timeline{max-width:720px;margin:60px auto 0;position:relative;padding-left:44px;}
+  .timeline::before{ /* track */
+    content:"";position:absolute;left:11px;top:8px;bottom:8px;width:1px;
+    background:rgba(244,241,234,0.12);
+  }
+  .timeline .flow{ /* animated gold line drawn by scroll */
+    position:absolute;left:11px;top:8px;width:1px;height:0;
+    background:linear-gradient(180deg,var(--gold),var(--gold-bright));
+    box-shadow:0 0 10px rgba(201,169,110,0.4);
+    transition:height .1s linear;
+  }
   .t-step{
+    position:relative;
     display:grid;grid-template-columns:120px 1fr;gap:28px;
     padding:30px 0;border-bottom:1px solid rgba(244,241,234,0.1);
+  }
+  .t-step::before{ /* node */
+    content:"";position:absolute;left:-39px;top:42px;width:11px;height:11px;
+    border-radius:50%;border:1px solid var(--gold);background:var(--charcoal);
+    transition:background .4s, box-shadow .4s;
+  }
+  .t-step.lit::before{
+    background:var(--gold);box-shadow:0 0 14px rgba(201,169,110,0.65);
   }
   .t-step:last-child{border-bottom:0;}
   .t-when{
@@ -202,6 +328,16 @@
     content:"";position:absolute;inset:10px;border:1px solid rgba(201,169,110,0.18);
     pointer-events:none;
   }
+  .price-card::after{ /* rotating conic glint on the border */
+    content:"";position:absolute;inset:-1px;pointer-events:none;
+    background:conic-gradient(from var(--glint,0deg), transparent 0 340deg, rgba(227,200,147,0.5) 350deg, transparent 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+    padding:1px;
+    animation:glint 7s linear infinite;
+  }
+  @property --glint{syntax:'<angle>';initial-value:0deg;inherits:false;}
+  @keyframes glint{to{--glint:360deg;}}
   .price-num{
     font-family:'Playfair Display',serif;font-weight:500;font-size:88px;line-height:1;
     margin:18px 0 4px;
@@ -218,14 +354,35 @@
   }
   .guarantee{margin-top:26px;font-size:17px;color:var(--ivory-dim);font-style:italic;}
 
+  /* ---------- steps ---------- */
+  .steps{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+    background:rgba(201,169,110,0.18);margin-top:56px;
+  }
+  .step{background:var(--charcoal);padding:48px 34px;text-align:center;transition:background .4s;}
+  .step:hover{background:var(--charcoal-card);}
+  .step .n{
+    font-family:'Playfair Display',serif;color:var(--gold);font-size:44px;display:block;margin-bottom:14px;
+  }
+  .step h3{font-family:'Playfair Display',serif;font-weight:500;font-size:22px;margin-bottom:10px;}
+  .step p{color:var(--ivory-dim);font-size:18px;}
+  @media(max-width:820px){.steps{grid-template-columns:1fr;}}
+
   /* ---------- signup ---------- */
-  .signup{background:var(--charcoal-lift);}
-  .signup-box{max-width:620px;margin:0 auto;text-align:center;}
+  .signup{background:var(--charcoal-lift);overflow:hidden;}
+  .lotus-bg{
+    position:absolute;left:50%;bottom:-40px;transform:translateX(-50%);
+    opacity:0.45;pointer-events:none;
+  }
+  .signup-box{max-width:620px;margin:0 auto;text-align:center;position:relative;z-index:1;}
   .signup form{display:flex;gap:12px;margin-top:38px;flex-wrap:wrap;justify-content:center;}
   .signup input[type=email]{
     flex:1 1 300px;background:transparent;border:1px solid var(--gold-dim);
     color:var(--ivory);font-family:'Cormorant Garamond',serif;font-size:19px;
-    padding:14px 20px;border-radius:2px;
+    padding:14px 20px;border-radius:2px;transition:border-color .3s, box-shadow .3s;
+  }
+  .signup input[type=email]:focus{
+    border-color:var(--gold);box-shadow:0 0 18px rgba(201,169,110,0.2);outline:none;
   }
   .signup input::placeholder{color:rgba(244,241,234,0.45);font-style:italic;}
   .form-msg{margin-top:18px;font-style:italic;color:var(--gold);min-height:26px;font-size:18px;}
@@ -236,35 +393,21 @@
   .faq-q{
     width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
     font-family:'Playfair Display',serif;font-weight:500;font-size:22px;color:var(--ivory);
-    padding:26px 44px 26px 0;position:relative;line-height:1.3;
+    padding:26px 44px 26px 0;position:relative;line-height:1.3;transition:color .25s;
   }
+  .faq-q:hover{color:var(--gold-bright);}
   .faq-q::after{
     content:"+";position:absolute;right:4px;top:50%;transform:translateY(-50%);
     color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;
-    transition:transform .25s;
+    transition:transform .3s;
   }
   .faq-item.open .faq-q::after{transform:translateY(-50%) rotate(45deg);}
-  .faq-a{
-    max-height:0;overflow:hidden;transition:max-height .35s ease;
-  }
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease;}
   .faq-a p{color:var(--ivory-dim);padding:0 0 26px;max-width:680px;font-size:19px;}
-
-  /* ---------- how to buy ---------- */
-  .steps{
-    display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
-    background:rgba(201,169,110,0.18);margin-top:56px;
-  }
-  .step{background:var(--charcoal);padding:44px 34px;text-align:center;}
-  .step .n{
-    font-family:'Playfair Display',serif;color:var(--gold);font-size:40px;display:block;margin-bottom:14px;
-  }
-  .step h3{font-family:'Playfair Display',serif;font-weight:500;font-size:22px;margin-bottom:10px;}
-  .step p{color:var(--ivory-dim);font-size:18px;}
-  @media(max-width:820px){.steps{grid-template-columns:1fr;}}
 
   /* ---------- footer ---------- */
   footer{
-    text-align:center;padding:80px 28px 60px;
+    text-align:center;padding:90px 28px 60px;position:relative;overflow:hidden;
     background:radial-gradient(ellipse 130% 100% at 50% 100%, var(--charcoal-lift) 0%, var(--charcoal) 70%);
   }
   footer .hairline{width:min(420px,70%);margin:0 auto 30px;}
@@ -274,6 +417,9 @@
 </style>
 </head>
 <body>
+
+<div id="progress" aria-hidden="true"></div>
+<canvas id="dust" aria-hidden="true"></canvas>
 
 <!-- ============ NAV ============ -->
 <nav>
@@ -296,11 +442,12 @@
 
 <!-- ============ HERO ============ -->
 <header class="hero" id="top">
-  <svg class="enso" width="120" height="120" viewBox="0 0 150 150" fill="none" aria-hidden="true">
-    <circle cx="75" cy="75" r="62" stroke="#C9A96E" stroke-width="2.5" stroke-linecap="round"
-      stroke-dasharray="330 60" transform="rotate(-64 75 75)"/>
+  <svg class="enso-hero enso-breathe" width="130" height="130" viewBox="0 0 150 150" fill="none" aria-hidden="true">
+    <circle class="stroke" cx="75" cy="75" r="62" stroke="#C9A96E" stroke-width="2.5" stroke-linecap="round"
+      pathLength="340" stroke-dasharray="340" transform="rotate(-64 75 75)"
+      style="stroke-dasharray:295 45;"/>
   </svg>
-  <p class="eyebrow">A complete practice-to-business system</p>
+  <p class="eyebrow" style="opacity:0;animation:riseIn 1s ease .6s forwards;">A complete practice-to-business system</p>
   <h1>
     <span class="hero-kicker">The Meditation Teacher's</span><br>
     <span class="hero-title">Business&nbsp;OS</span>
@@ -315,19 +462,35 @@
 
 <!-- ============ PROBLEM ============ -->
 <section class="section" id="problem">
-  <div class="wrap reveal">
-    <p class="eyebrow">The gap nobody mentions in teacher training</p>
-    <h2>A certificate is not a career.</h2>
-    <div class="problem-grid">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">The gap nobody mentions in teacher training</p>
+      <h2>A certificate is not a career.</h2>
+    </div>
+    <div class="problem-grid stagger">
       <div class="problem-cell">
+        <svg class="glyph" width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+          <rect x="8" y="6" width="28" height="34" rx="1" stroke="#C9A96E" stroke-width="1.4"/>
+          <path d="M14 15h16M14 21h16M14 27h10" stroke="#C9A96E" stroke-width="1.2" stroke-linecap="round"/>
+          <circle cx="31" cy="31" r="6.5" stroke="#C9A96E" stroke-width="1.2"/>
+          <path d="M28.5 31l1.8 1.8 3.2-3.6" stroke="#C9A96E" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
         <h3>You paid thousands to learn to teach.</h3>
         <p>Your training covered the dharma, the anatomy, the sequencing. It did not cover pricing, pipelines, or how to fill a room.</p>
       </div>
       <div class="problem-cell">
+        <svg class="glyph" width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+          <circle cx="22" cy="22" r="16" stroke="#C9A96E" stroke-width="1.4"/>
+          <path d="M22 12v10l7 5" stroke="#C9A96E" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
         <h3>Every week without students stings.</h3>
         <p>Not just financially. Each empty week whispers that the certification was a mistake. It wasn't — the infrastructure is just missing.</p>
       </div>
       <div class="problem-cell">
+        <svg class="glyph" width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+          <path d="M6 34c5-2 7-10 10-10s4 6 7 6 4-14 8-14 5 8 7 8" stroke="#C9A96E" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 38h32" stroke="#C9A96E" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+        </svg>
         <h3>Generic business advice doesn't fit.</h3>
         <p>Funnels and hustle-culture tactics feel wrong for this work. You need a system built for how meditation students actually arrive, return, and refer.</p>
       </div>
@@ -337,10 +500,12 @@
 
 <!-- ============ MODULES ============ -->
 <section class="section modules" id="inside">
-  <div class="wrap reveal">
-    <p class="eyebrow">What's inside</p>
-    <h2>Five modules. One running studio.</h2>
-    <div class="mod-layout">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">What's inside</p>
+      <h2>Five modules. One running studio.</h2>
+    </div>
+    <div class="mod-layout reveal">
       <div class="mod-tabs" role="tablist" aria-label="System modules">
         <button class="mod-tab" role="tab" aria-selected="true" data-mod="0"><span class="n">Module I</span>Student CRM</button>
         <button class="mod-tab" role="tab" aria-selected="false" data-mod="1"><span class="n">Module II</span>Class &amp; Curriculum Planner</button>
@@ -348,17 +513,28 @@
         <button class="mod-tab" role="tab" aria-selected="false" data-mod="3"><span class="n">Module IV</span>30-Day Launch Playbook</button>
         <button class="mod-tab" role="tab" aria-selected="false" data-mod="4"><span class="n">Module V</span>Email &amp; Message Swipes</button>
       </div>
-      <div class="mod-panel" role="tabpanel" id="mod-panel"></div>
+      <div class="mod-panel" role="tabpanel">
+        <div class="mod-inner" id="mod-inner"></div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- ============ 30 DAYS ============ -->
 <section class="section" id="plan">
-  <div class="wrap reveal">
-    <p class="eyebrow">The transformation</p>
-    <h2>From certificate to cohort in thirty days.</h2>
-    <div class="timeline">
+  <svg class="mountains" viewBox="0 0 1440 220" fill="none" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 200 L180 90 L300 160 L470 40 L620 170 L790 70 L960 190 L1120 100 L1290 165 L1440 80"
+      stroke="#C9A96E" stroke-width="1" opacity="0.35" stroke-linejoin="round" fill="none"/>
+    <path d="M0 220 L220 140 L400 200 L560 110 L760 210 L930 130 L1140 205 L1440 140"
+      stroke="#C9A96E" stroke-width="1" opacity="0.18" stroke-linejoin="round" fill="none"/>
+  </svg>
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">The transformation</p>
+      <h2>From certificate to cohort in thirty days.</h2>
+    </div>
+    <div class="timeline" id="timeline">
+      <div class="flow" id="timeline-flow"></div>
       <div class="t-step">
         <div class="t-when">Days 1–2</div>
         <div>
@@ -393,10 +569,12 @@
 
 <!-- ============ PRICING / BUY ============ -->
 <section class="section" id="buy">
-  <div class="wrap reveal">
-    <p class="eyebrow">One-time purchase</p>
-    <h2>Less than one drop-in student.</h2>
-    <div class="price-card">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">One-time purchase</p>
+      <h2>Less than one drop-in student.</h2>
+    </div>
+    <div class="price-card reveal">
       <p class="eyebrow" style="font-size:14px;">The Meditation Teacher's Business OS</p>
       <div class="price-num"><sup>$</sup>97</div>
       <p class="price-once">One payment. Yours forever, including updates.</p>
@@ -407,7 +585,7 @@
         <li>30-day launch playbook, day by day</li>
         <li>24 email &amp; message templates that don't sound like marketing</li>
       </ul>
-      <!-- ▼ REPLACE href WITH YOUR GUMROAD / LEMON SQUEEZY PRODUCT URL ▼ -->
+      <!-- ▼ REPLACE href WITH YOUR GUMROAD PRODUCT URL ▼ -->
       <a class="btn" id="buy-btn" href="https://YOURSTORE.gumroad.com/l/business-os">Get instant access — $97</a>
       <p class="guarantee">14-day guarantee: work the playbook, and if it isn't worth it, reply to your receipt for a full refund.</p>
     </div>
@@ -416,10 +594,12 @@
 
 <!-- ============ HOW BUYING WORKS ============ -->
 <section class="section" id="how">
-  <div class="wrap reveal">
-    <p class="eyebrow">How it works</p>
-    <h2>Three steps between you and the system.</h2>
-    <div class="steps">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">How it works</p>
+      <h2>Three steps between you and the system.</h2>
+    </div>
+    <div class="steps stagger">
       <div class="step">
         <span class="n">1</span>
         <h3>Pay securely</h3>
@@ -441,12 +621,19 @@
 
 <!-- ============ SIGNUP ============ -->
 <section class="section signup" id="signup">
-  <div class="wrap reveal">
-    <div class="signup-box">
+  <svg class="lotus-bg" width="420" height="180" viewBox="0 0 420 180" fill="none" aria-hidden="true">
+    <path d="M210 160 C186 128 186 92 210 58 C234 92 234 128 210 160Z" stroke="#C9A96E" stroke-width="1" opacity="0.7"/>
+    <path d="M210 160 C168 140 146 108 148 70 C190 84 210 116 210 160Z" stroke="#C9A96E" stroke-width="1" opacity="0.5"/>
+    <path d="M210 160 C252 140 274 108 272 70 C230 84 210 116 210 160Z" stroke="#C9A96E" stroke-width="1" opacity="0.5"/>
+    <path d="M210 160 C150 152 112 126 102 92 C158 96 196 124 210 160Z" stroke="#C9A96E" stroke-width="1" opacity="0.3"/>
+    <path d="M210 160 C270 152 308 126 318 92 C262 96 224 124 210 160Z" stroke="#C9A96E" stroke-width="1" opacity="0.3"/>
+  </svg>
+  <div class="wrap">
+    <div class="signup-box reveal">
       <p class="eyebrow">Not ready yet?</p>
       <h2>Take the first chapter free.</h2>
       <p style="color:var(--ivory-dim);max-width:520px;margin:0 auto;">Get the Pricing Calculator and Day 1–3 of the launch playbook by email — see how the system thinks before you buy it.</p>
-      <!-- ▼ REPLACE action WITH YOUR FORMSPREE ENDPOINT (formspree.io — free tier works) ▼ -->
+      <!-- ▼ REPLACE action WITH YOUR FORMSPREE ENDPOINT ▼ -->
       <form id="signup-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
         <input type="email" name="email" required placeholder="Your email address" aria-label="Email address">
         <button class="btn" type="submit">Send it to me</button>
@@ -458,10 +645,12 @@
 
 <!-- ============ FAQ ============ -->
 <section class="section" id="faq">
-  <div class="wrap reveal">
-    <p class="eyebrow">Questions</p>
-    <h2>Asked before buying.</h2>
-    <div class="faq">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">Questions</p>
+      <h2>Asked before buying.</h2>
+    </div>
+    <div class="faq reveal">
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">I've never used Notion. Is this for me?</button>
         <div class="faq-a"><p>Yes. The workspace arrives fully built — you duplicate it with one click and follow a 15-minute orientation video. If you can use email, you can run this.</p></div>
@@ -502,6 +691,58 @@
 </footer>
 
 <script>
+/* ---------- reduced motion flag ---------- */
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- gold dust particles ---------- */
+(function(){
+  if(REDUCED) return;
+  const c = document.getElementById('dust');
+  const ctx = c.getContext('2d');
+  let w, h, parts = [];
+  const COUNT = Math.min(70, Math.floor(window.innerWidth / 18));
+  function resize(){
+    w = c.width = window.innerWidth;
+    h = c.height = window.innerHeight;
+  }
+  function make(){
+    return {
+      x: Math.random()*w,
+      y: Math.random()*h,
+      r: Math.random()*1.6 + 0.4,
+      vy: -(Math.random()*0.25 + 0.08),
+      vx: (Math.random()-0.5)*0.12,
+      a: Math.random()*0.5 + 0.1,
+      tw: Math.random()*0.02 + 0.005,
+      ph: Math.random()*Math.PI*2
+    };
+  }
+  function init(){ parts = Array.from({length:COUNT}, make); }
+  function tick(t){
+    ctx.clearRect(0,0,w,h);
+    for(const p of parts){
+      p.y += p.vy; p.x += p.vx;
+      if(p.y < -6){ p.y = h+6; p.x = Math.random()*w; }
+      if(p.x < -6) p.x = w+6; if(p.x > w+6) p.x = -6;
+      const alpha = p.a * (0.6 + 0.4*Math.sin(t*p.tw*0.06 + p.ph));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(201,169,110,${alpha})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  window.addEventListener('resize', ()=>{resize(); init();});
+  resize(); init(); requestAnimationFrame(tick);
+})();
+
+/* ---------- scroll progress bar ---------- */
+const bar = document.getElementById('progress');
+window.addEventListener('scroll', ()=>{
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (window.scrollY / max * 100) + '%';
+}, {passive:true});
+
 /* ---------- module tabs ---------- */
 const MODULES = [
   {
@@ -555,15 +796,18 @@ const MODULES = [
     ]
   }
 ];
-const panel = document.getElementById('mod-panel');
+const inner = document.getElementById('mod-inner');
 const tabs = document.querySelectorAll('.mod-tab');
-function renderModule(i){
+function renderModule(i, animate=true){
   const m = MODULES[i];
-  panel.innerHTML = `<h3>${m.title}</h3><p>${m.lead}</p><ul>${m.items.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  const html = `<h3>${m.title}</h3><p>${m.lead}</p><ul>${m.items.map(x=>`<li>${x}</li>`).join('')}</ul>`;
   tabs.forEach((t,ti)=>t.setAttribute('aria-selected', ti===i ? 'true':'false'));
+  if(!animate || REDUCED){ inner.innerHTML = html; return; }
+  inner.classList.add('swap');
+  setTimeout(()=>{ inner.innerHTML = html; inner.classList.remove('swap'); }, 280);
 }
 tabs.forEach((t,i)=>t.addEventListener('click',()=>renderModule(i)));
-renderModule(0);
+renderModule(0,false);
 
 /* ---------- FAQ accordion ---------- */
 document.querySelectorAll('.faq-item').forEach(item=>{
@@ -576,13 +820,32 @@ document.querySelectorAll('.faq-item').forEach(item=>{
   });
 });
 
-/* ---------- scroll reveals ---------- */
+/* ---------- reveals (single + staggered) ---------- */
 const io = new IntersectionObserver(entries=>{
   entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
 },{threshold:0.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+document.querySelectorAll('.reveal, .stagger').forEach(el=>io.observe(el));
 
-/* ---------- signup form (AJAX so the visitor never leaves the page) ---------- */
+/* ---------- timeline scroll-drawn line + lit nodes ---------- */
+const tl = document.getElementById('timeline');
+const flow = document.getElementById('timeline-flow');
+const steps = document.querySelectorAll('.t-step');
+function drawTimeline(){
+  if(!tl) return;
+  const rect = tl.getBoundingClientRect();
+  const vh = window.innerHeight;
+  const progress = Math.min(1, Math.max(0, (vh*0.75 - rect.top) / rect.height));
+  flow.style.height = (progress * (rect.height - 16)) + 'px';
+  steps.forEach(s=>{
+    const r = s.getBoundingClientRect();
+    s.classList.toggle('lit', r.top + 50 < vh*0.75);
+  });
+}
+window.addEventListener('scroll', drawTimeline, {passive:true});
+window.addEventListener('resize', drawTimeline);
+drawTimeline();
+
+/* ---------- signup form ---------- */
 const form = document.getElementById('signup-form');
 const msg = document.getElementById('form-msg');
 form.addEventListener('submit', async (e)=>{
