@@ -648,10 +648,9 @@ src="https://www.facebook.com/tr?id=2113354785587709&ev=PageView&noscript=1"
   <div class="wrap">
     <div class="signup-box reveal">
       <p class="eyebrow">Not ready yet?</p>
-      <h2>Take the first chapter free.</h2>
-      <p style="color:var(--ivory-dim);max-width:520px;margin:0 auto;">Get the Pricing Calculator and Day 1–3 of the launch playbook by email — see how the system thinks before you buy it.</p>
-      <!-- ▼ REPLACE action WITH YOUR FORMSPREE ENDPOINT ▼ -->
-      <form id="signup-form" action="https://formspree.io/f/xzdnagpp" method="POST">
+      <h2>Price your teaching first.</h2>
+      <p style="color:var(--ivory-dim);max-width:520px;margin:0 auto;">Get the free Pricing Calculator by email — see what your cohort actually needs to cost before you buy anything.</p>
+      <form id="signup-form" action="https://hook.us2.make.com/yra3e0bpll4feno9woyxk3r2aqb98aq2" method="POST">
         <input type="email" name="email" required placeholder="Your email address" aria-label="Email address">
         <button class="btn" type="submit">Send it to me</button>
       </form>
@@ -704,7 +703,7 @@ src="https://www.facebook.com/tr?id=2113354785587709&ev=PageView&noscript=1"
       stroke-dasharray="330 60" transform="rotate(-64 75 75)"/>
   </svg>
   <p class="foot-author">Federico Andino, Ed.D.</p>
-  <p class="foot-note">© 2026 · <a href="https://www.fedeandino.com">fedeandino.com</a> · Questions: replace-with-fede@fedeandino.com</p>
+  <p class="foot-note">© 2026 · <a href="https://www.fedeandino.com">fedeandino.com</a> · Questions: fede@fedeandino.com</p>
 </footer>
 
 <script>
@@ -877,6 +876,7 @@ form.addEventListener('submit', async (e)=>{
     if(res.ok){
       form.reset();
       msg.textContent = 'Done — check your inbox in the next few minutes.';
+      if(typeof fbq === 'function'){ fbq('track', 'Lead'); }
     }else{
       msg.textContent = 'Something went wrong. Please try again, or email us directly.';
     }
